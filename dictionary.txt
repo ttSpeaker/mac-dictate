@@ -1,0 +1,42 @@
+# Domain dictionary for speech-to-text cleanup
+# Add squad names, coworker names, microservices, and technical terms here.
+PedidosYa
+PeYa
+GIS
+Checkout
+BFF
+Battlefront
+Pricing
+Payment
+Instruments
+Valkey
+Redis
+Kafka
+Datadog
+Grafana
+Tempo
+SRE
+Golang
+Go
+Pull Request
+PR
+1-on-1
+SBI
+Radical Candor
+OKR
+KPI
+Sprint
+Backlog
+Retro
+Tech Lead
+Architect
+Staff Engineer
+Senior Engineer
+Incident
+Postmortem
+Runbook
+LocalStack
+WireMock
+Vault
+FunWithFlags
+FwF
