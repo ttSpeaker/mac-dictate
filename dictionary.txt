@@ -1,42 +1,197 @@
-# Domain dictionary for speech-to-text cleanup
-# Add squad names, coworker names, microservices, and technical terms here.
+# ==============================================================================
+# Domain Dictionary for Speech-to-Text Cleanup (Mac Dictate)
+# Automatically inferred from Salvador Serruya's Slack & Engineering Ecosystem
+# ==============================================================================
+
+# --- People & Teammates ---
+Salvador Serruya
+Ariel Abut
+Nicolas Fernandez
+Nico Fernandez
+Nicolas Villavicencio
+Manuel Pintos
+Manu Pintos
+Victoria Croatto
+Vicky Croatto
+Lucia Vazquez
+Lucía Vázquez
+Flor Acevedo
+María Florencia Acevedo
+Andres Lasso
+Andrés Lasso
+Maxi Garcia Rozado
+Maximiliano Garcia Rozado
+Arturo Piñeiro
+Mathias Emmanuel Benitez
+Florencia Chao
+Santiago Roa
+Julieta Sarantes
+Agustina Núñez
+Ionatan Stamati
+Bruno Curti
+Rocío Casco
+Juan Rosales
+Ema Reynares
+Román
+Sofi
+Sebastian Posadas
+Sebas Posadas
+Lorena Pressiani
+Lora Pressiani
+
+# --- Squads, Teams & Orgs ---
 PedidosYa
 PeYa
-GIS
-Checkout
-BFF
-Battlefront
-Pricing
-Payment
-Instruments
-Valkey
+Delivery Hero
+Team AAC
+Team NSM
+Team C
+Team H
+Team A
+Team Y
+Central DH Fintech
+Checkout Core
+Payment Experience
+UX Ops
+
+# --- Microservices & Repositories ---
+checkout-summary-bff
+payment-experience-bff
+px-bff
+payment-experience-service
+px-service
+pxs
+checkout-service
+user-fintech-bff
+checkout-validations-service
+payment-methods-store
+PMS
+payment-instruments-service
+PIS
+payment-manager-service
+loyalty-program-bff
+loyalty-program-payments
+basket-service
+pricing-service
+deals-pricing-service
+delivery-fee-service
+order-events-service
+cart-bff
+donations
+communications-gateway
+
+# --- Payments, Gateways & Methods ---
+Zero Auth
+BIN
+BIN Color
+Spreedly
+dLocal
+Cybersource
+Worldpay
+Decidir
+Decidir Plus
+PayU Latam
+GlobalCollect
+MercadoPago
+Plexo
+Paymentez
+Vpos
+Yape
+Yape Plus
+Yappy
+DeUna
+Pluxee
+Mach
+Chin Chin
+Sucredito
+Credimas
+Modo
+Mi Billetera
+HPP
+3DS
+ThreeDS
+CVV
+Tokenization
+Preauth
+Reversal
+Authorization and Void
+
+# --- UI Components, Templates & Features ---
+PriceBox
+Pricebox
+Row Informative
+BottomSheet
+Carousel
+Fenix
+Fenix 2.0
+Ditto
+FunWithFlags
+FwF
+EPPO
+LOYALTY_SUBSCRIPTION
+LOYALTY_RENEWAL
+INCENTIVE_DETAILS
+GROCERIES
+DELIVERY_PEYA
+SERVICE_FEE
+DELIVERY_FEE
+SUBTOTAL
+standardTip
+purchase_v5_migration
+purchase_id
+loyalty_add_on
+CashDefaultPolicy
+BasePaymentInstrumentBuilder
+Multi-pricer
+Multi-cart
+Weather Based Tipping
+Affordability Tag
+Delivery Prioritario
+DoubleYa
+
+# --- Infrastructure, Data & Developer Tooling ---
+LocalStack
+WireMock
+Vault
+Jarvis
+checkout-localdev-cli
+localdev
+DynamoDB
 Redis
+Valkey
 Kafka
 Datadog
 Grafana
 Tempo
-SRE
+OpsGenie
+Perseus
+Gordon
+STS token
+STS SDK
+Artifactory
+Gradle
+Kotlin
 Golang
 Go
-Pull Request
-PR
+Postman
+
+# --- Agile, Leadership & Review Terminology ---
 1-on-1
 SBI
 Radical Candor
+Leader-Leader
+ADR
+RFC
+PRD
+PR
+OnCall
+Prel
+Postmortem
+Runbook
 OKR
 KPI
 Sprint
-Backlog
 Retro
-Tech Lead
-Architect
-Staff Engineer
-Senior Engineer
-Incident
-Postmortem
-Runbook
-LocalStack
-WireMock
-Vault
-FunWithFlags
-FwF
+Refinement
+Hero Gen
+Enzo

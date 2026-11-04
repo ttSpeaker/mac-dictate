@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Mac Dictate — Fast Apple Silicon dictation with MLX Whisper and local Ollama cleanup.
+Mac Dictate — Fast Apple Silicon dictation with MLX Whisper and local LM Studio / Ollama cleanup.
 """
 import os
 import sys
@@ -12,7 +12,7 @@ import threading
 import subprocess
 from pathlib import Path
 
-DEFAULT_OLLAMA_MODEL = "gemma:2b"
+DEFAULT_PROVIDER = "auto"
 DEFAULT_WHISPER_MODEL = "mlx-community/whisper-large-v3-turbo"
 SCRIPT_DIR = Path(__file__).parent.resolve()
 DEFAULT_DICT_PATH = SCRIPT_DIR / "dictionary.txt"
@@ -28,10 +28,6 @@ def _preload_whisper_worker():
         _mlx_whisper = mlx_whisper
     except Exception as e:
         _preload_error = e
-
-def start_whisper_preload():
-    t = threading.Thread(target=_preload_worker, daemon=True)
-    t.start()
 
 def load_dictionary(dict_path: Path) -> str:
     if not dict_path.exists():
@@ -104,37 +100,93 @@ def transcribe(wav_path: str, model_name: str, prompt_terms: str) -> str:
     print(f"\033[90mTranscribed in {elapsed:.2f}s\033[0m", flush=True)
     return raw_text
 
-def clean_with_ollama(text: str, model_name: str, dictionary_terms: str) -> str:
-    if not model_name or model_name.lower() in ("none", "false", "0"):
+def get_lmstudio_loaded_model() -> str:
+    import requests
+    try:
+        r = requests.get("http://localhost:1234/v1/models", timeout=1.5)
+        if r.status_code == 200:
+            models = r.json().get("data", [])
+            for m in models:
+                mid = m.get("id", "")
+                if "embed" not in mid.lower():
+                    return mid
+            if models:
+                return models[0].get("id", "")
+    except Exception:
+        pass
+    return ""
+
+def clean_with_llm(text: str, provider: str, model_name: str, dictionary_terms: str) -> str:
+    if provider == "none" or (model_name and model_name.lower() in ("none", "false", "0")):
         return text
 
-    print(f"\033[1;35m🤖 Polishing text with Ollama ({model_name})...\033[0m", flush=True)
     import requests
 
-    dict_hint = f"\nTechnical dictionary: {dictionary_terms}\n" if dictionary_terms else ""
-
-    prompt = (
+    system_prompt = (
         "Eres un editor técnico de notas dictadas por voz.\n"
         "Tu tarea es limpiar la transcripción cruda:\n"
         "1. Corregir errores fonéticos y términos técnicos usando este diccionario: " + dictionary_terms + "\n"
         "2. Mantener ESTRICTAMENTE el mismo idioma original (español o inglés). NO TRADUZCAS.\n"
         "3. Corregir puntuación y mayúsculas.\n"
-        "4. Devuelve ÚNICAMENTE el texto corregido, sin saludos, sin explicaciones ni markdown decorativo.\n\n"
-        f"Texto crudo:\n{text}\n\n"
-        "Texto corregido:"
+        "4. Devuelve ÚNICAMENTE el texto corregido, sin saludos, sin explicaciones ni markdown decorativo."
     )
 
+    # 1. Try LM Studio if provider in ("auto", "lmstudio")
+    if provider in ("auto", "lmstudio"):
+        lm_model = model_name
+        if not lm_model or lm_model == "auto":
+            lm_model = get_lmstudio_loaded_model()
+
+        if lm_model or provider == "lmstudio":
+            target_model = lm_model or "local-model"
+            print(f"\033[1;35m🤖 Polishing text with LM Studio ({target_model})...\033[0m", flush=True)
+            t0 = time.time()
+            try:
+                resp = requests.post(
+                    "http://localhost:1234/v1/chat/completions",
+                    json={
+                        "model": target_model,
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": text}
+                        ],
+                        "temperature": 0.2,
+                        "stream": False
+                    },
+                    timeout=60
+                )
+                elapsed = time.time() - t0
+                if resp.status_code == 200:
+                    data = resp.json()
+                    choices = data.get("choices", [])
+                    if choices:
+                        cleaned = choices[0].get("message", {}).get("content", "").strip()
+                        # Strip thinking / reasoning tags if present
+                        if "<think>" in cleaned and "</think>" in cleaned:
+                            cleaned = cleaned.split("</think>")[-1].strip()
+                        print(f"\033[90mFormatted in {elapsed:.2f}s\033[0m", flush=True)
+                        return cleaned if cleaned else text
+                else:
+                    print(f"[Warning] LM Studio returned status {resp.status_code}.", file=sys.stderr)
+            except Exception as e:
+                if provider == "lmstudio":
+                    print(f"[Warning] LM Studio unavailable ({e}), keeping raw text.", file=sys.stderr)
+                    return text
+                # In auto mode, proceed to Ollama fallback
+
+    # 2. Try Ollama if provider in ("auto", "ollama")
+    ollama_model = model_name if (model_name and model_name != "auto") else "gemma:2b"
+    print(f"\033[1;35m🤖 Polishing text with Ollama ({ollama_model})...\033[0m", flush=True)
     t0 = time.time()
     try:
+        prompt = f"{system_prompt}\n\nTexto crudo:\n{text}\n\nTexto corregido:"
         resp = requests.post(
             "http://localhost:11434/api/generate",
             json={
-                "model": model_name,
+                "model": ollama_model,
                 "prompt": prompt,
                 "stream": False,
-                "options": {
-                    "temperature": 0.2
-                }
+                "options": {"temperature": 0.2}
             },
             timeout=60
         )
@@ -144,13 +196,13 @@ def clean_with_ollama(text: str, model_name: str, dictionary_terms: str) -> str:
             print(f"\033[90mFormatted in {elapsed:.2f}s\033[0m", flush=True)
             return cleaned if cleaned else text
         elif resp.status_code == 404:
-            print(f"[Warning] Ollama model '{model_name}' not found. Run: ollama pull {model_name}", file=sys.stderr)
+            print(f"[Warning] Ollama model '{ollama_model}' not found.", file=sys.stderr)
             return text
         else:
             print(f"[Warning] Ollama returned status {resp.status_code}, keeping raw text.", file=sys.stderr)
             return text
     except Exception as e:
-        print(f"[Warning] Ollama unavailable ({e}), keeping raw text.", file=sys.stderr)
+        print(f"[Warning] Local LLM unavailable ({e}), keeping raw text.", file=sys.stderr)
         return text
 
 def main():
@@ -158,9 +210,10 @@ def main():
     preload_thread = threading.Thread(target=_preload_whisper_worker, daemon=True)
     preload_thread.start()
 
-    parser = argparse.ArgumentParser(description="Mac Dictate: Local speech dictation with Whisper and Ollama.")
+    parser = argparse.ArgumentParser(description="Mac Dictate: Local speech dictation with Whisper and LM Studio / Ollama.")
     parser.add_argument("-f", "--file", help="Path to existing audio file to transcribe instead of recording.")
-    parser.add_argument("-m", "--model", default=DEFAULT_OLLAMA_MODEL, help=f"Ollama model for cleanup (default: {DEFAULT_OLLAMA_MODEL}, or 'none').")
+    parser.add_argument("-p", "--provider", default=DEFAULT_PROVIDER, choices=["auto", "lmstudio", "ollama", "none"], help="LLM provider for text cleanup (default: auto).")
+    parser.add_argument("-m", "--model", default="auto", help="LLM model name (default: auto, detects active model in provider).")
     parser.add_argument("-w", "--whisper-model", default=DEFAULT_WHISPER_MODEL, help=f"MLX Whisper model (default: {DEFAULT_WHISPER_MODEL}).")
     parser.add_argument("-o", "--output", help="Optional markdown file to append transcription to.")
     parser.add_argument("-d", "--dict", default=str(DEFAULT_DICT_PATH), help="Path to dictionary terms file.")
@@ -195,7 +248,7 @@ def main():
 
         print(f"\n\033[90m[Raw Whisper]\033[0m: {raw}")
 
-        final_text = clean_with_ollama(raw, args.model, dict_terms)
+        final_text = clean_with_llm(raw, args.provider, args.model, dict_terms)
 
         print("\n" + "=" * 60)
         print("\033[1;32m📝 Final Result:\033[0m")

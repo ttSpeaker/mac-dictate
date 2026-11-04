@@ -40,16 +40,23 @@ else
   ./.venv/bin/pip install -r requirements.txt
 fi
 
-# 5. Check Ollama
-if ! command -v ollama >/dev/null 2>&1; then
-  echo "Warning: ollama is not installed. LLM cleanup will be skipped unless installed."
-  echo "Install it via: brew install ollama"
-else
+# 5. Check Local LLM (LM Studio or Ollama)
+TARGET_BIN="$HOME/.local/bin"
+mkdir -p "$TARGET_BIN"
+
+if [[ -f "$HOME/.lmstudio/bin/lms" ]]; then
+  echo "-> Found LM Studio CLI at $HOME/.lmstudio/bin/lms"
+  ln -sf "$HOME/.lmstudio/bin/lms" "$TARGET_BIN/lms"
+elif command -v lms >/dev/null 2>&1; then
+  echo "-> Found lms CLI in PATH"
+elif command -v ollama >/dev/null 2>&1; then
   echo "-> Checking Ollama model (gemma:2b)..."
   if ! ollama list 2>/dev/null | grep -q "gemma:2b"; then
     echo "Model gemma:2b not found. Pulling..."
     ollama pull gemma:2b || true
   fi
+else
+  echo "Note: Neither LM Studio nor Ollama found. Install LM Studio (https://lmstudio.ai/) for local AI cleanup."
 fi
 
 # 6. Install CLI wrapper to ~/.local/bin
