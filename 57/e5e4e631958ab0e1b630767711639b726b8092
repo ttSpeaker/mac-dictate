@@ -1,0 +1,33 @@
+README.md
+  s_890972337684d5::t_573d172331c5ab 3,8-9,19,39-40,42-43,45-46
+dictate.py
+  s_890972337684d5::t_9bea409dfabb93 3,15,103-120,125,131,134-179,182,186,189,199,205,213,215-216,251
+dictionary.txt
+  s_8650eae1754c15::t_dca38b69785605 1-42,45-159,161,166-173,176-178,182-190,195-197
+install.sh
+  s_890972337684d5::t_088ade792c40bf 43-52,58-59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "57e5e4e631958ab0e1b630767711639b726b8092",
+  "prompts": {},
+  "sessions": {
+    "s_8650eae1754c15": {
+      "agent_id": {
+        "tool": "gemini",
+        "id": "7faf255b-4578-401c-a85b-8ee0d674ab73",
+        "model": "gemini-3.5-flash"
+      },
+      "human_author": "Salvador Serruya <js.serruya@gmail.com>"
+    },
+    "s_890972337684d5": {
+      "agent_id": {
+        "tool": "gemini",
+        "id": "401adc8d-3f4d-42c6-850a-d5115f9b0488",
+        "model": "gemini-3.5-flash"
+      },
+      "human_author": "Salvador Serruya <js.serruya@gmail.com>"
+    }
+  }
+}
